@@ -1,0 +1,40 @@
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import pandas as pd
+import plotly.express as px
+
+# Read the IGN CSV data
+df = pd.read_csv('ign.csv')
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div([
+    html.H1("Game Review Dashboard"),
+    
+    dcc.Dropdown(
+        id='platform-selector',
+        options=[
+            {'label': platform, 'value': platform} for platform in df['platform'].unique()
+        ],
+        value='PlayStation Vita'
+    ),
+    
+    dcc.Graph(id='score-plot')
+])
+
+@app.callback(
+    Output('score-plot', 'figure'),
+    [Input('platform-selector', 'value')]
+)
+def update_graph(selected_platform):
+    filtered_df = df[df['platform'] == selected_platform]
+    fig = px.bar(filtered_df, x='title', y='score', title=f'Scores for {selected_platform} Games')
+    fig.update_xaxes(title='Game Title')
+    fig.update_yaxes(title='Score')
+    fig.update_traces(marker_color='skyblue')
+    
+    return fig
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
